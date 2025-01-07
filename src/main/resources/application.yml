@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: java-bff-service
+  datasource:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    url: ${DB_DRIVER}://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-test-query: SELECT 1
+      idle-timeout: 30000
+      connection-timeout: 30000
+      maximum-pool-size: 50
+      minimum-idle: 10
+      max-lifetime: 2000000
+      pool-name: SpringBootJPAHikariCP
+  liquibase:
+    liquibase-schema: public
+    default-schema: public
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: false
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: public
+  cache:
+    type: redis
+    cache-names: UsernameCache
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+feign:
+  client:
+    url:
+      deduplication: ${MANAGEMENT_HTTP_PROTOCOL}://${MANAGEMENT_HOST}:${MANAGEMENT_PORT}/${DEDUPLICATION_BASE_PATH}
+      enrichment: ${MANAGEMENT_HTTP_PROTOCOL}://${MANAGEMENT_HOST}:${MANAGEMENT_PORT}/${ENRICHMENT_BASE_PATH}
+      filter: ${MANAGEMENT_HTTP_PROTOCOL}://${MANAGEMENT_HOST}:${MANAGEMENT_PORT}/${FILTER_BASE_PATH}
+
+server:
+  port: ${APPLICATION_PORT}
