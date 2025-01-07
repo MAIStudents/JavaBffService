@@ -1,4 +1,4 @@
-package ru.mai.lessons.rpks.model;
+package ru.mai.lessons.rpks.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
