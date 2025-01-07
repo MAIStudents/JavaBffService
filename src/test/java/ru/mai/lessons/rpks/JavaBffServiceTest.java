@@ -35,8 +35,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import ru.mai.lessons.rpks.dto.request.UserRequest;
 import ru.mai.lessons.rpks.dto.response.UserResponse;
-import ru.mai.lessons.rpks.model.User;
-import ru.mai.lessons.rpks.repository.UserRepository;
+import ru.mai.lessons.rpks.models.User;
+import ru.mai.lessons.rpks.repositories.UserRepository;
 import ru.mai.lessons.rpks.services.UserService;
 
 @Testcontainers
