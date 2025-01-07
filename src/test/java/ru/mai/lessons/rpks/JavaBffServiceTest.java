@@ -93,6 +93,7 @@ public class JavaBffServiceTest {
 
   @Container
   public static GenericContainer<?> redisContainer = new GenericContainer<>(
+
       DockerImageName.parse("redis"))
       .withExposedPorts(6379)
       .waitingFor(Wait.forListeningPort())
