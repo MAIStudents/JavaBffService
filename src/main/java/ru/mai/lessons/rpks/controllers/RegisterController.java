@@ -1,33 +1,30 @@
 package ru.mai.lessons.rpks.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException.BadRequest;
 import org.springframework.web.client.HttpServerErrorException.InternalServerError;
-import ru.mai.lessons.rpks.dto.request.UserRequest;
-import ru.mai.lessons.rpks.dto.response.UserResponse;
+import ru.mai.lessons.rpks.dto.response.TokenResponse;
 
-@Tag(
-    name = "Контроллер для регистрации пользователей",
-    description = "Контроллер для регистрации пользователей"
-)
-public interface UserController {
+public interface RegisterController {
 
   @Operation(
       summary = "Регистрация пользователя",
-      description = "Регистрация пользователя",
+      description = "Выдача токена и запись пользователя в БД",
       responses = {
           @ApiResponse(
               responseCode = "200",
-              description = "Успешная регистрация пользователя",
+              description = "Успешная регистрация",
               content = @Content(
                   mediaType = "application/json",
-                  schema = @Schema(implementation = UserResponse.class)
+                  array = @ArraySchema(
+                      schema = @Schema(implementation = TokenResponse.class)
+                  )
               )
           ),
           @ApiResponse(
@@ -48,13 +45,6 @@ public interface UserController {
           )
       }
   )
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Запрос на регистрацию пользователя",
-      required = true,
-      content = @Content(
-          mediaType = "application/json",
-          schema = @Schema(implementation = UserRequest.class)
-      )
-  )
-  UserResponse register(@RequestBody @Valid UserRequest request);
+  @GetMapping("/register")
+  TokenResponse register(@RequestParam("username") String username);
 }

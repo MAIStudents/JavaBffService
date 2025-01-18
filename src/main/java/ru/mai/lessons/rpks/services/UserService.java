@@ -1,10 +1,10 @@
 package ru.mai.lessons.rpks.services;
 
-import org.springframework.security.core.userdetails.UserDetailsService;
-import ru.mai.lessons.rpks.dto.request.UserRequest;
-import ru.mai.lessons.rpks.dto.response.UserResponse;
+import ru.mai.lessons.rpks.models.User;
 
-public interface UserService extends UserDetailsService {
+public interface UserService {
 
-  UserResponse register(UserRequest user);
+  User createUser(User user);
+
+  User loadUserByUsername(String username);
 }

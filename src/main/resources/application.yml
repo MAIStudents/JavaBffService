@@ -18,7 +18,7 @@ spring:
     liquibase-schema: public
     default-schema: public
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    enabled: false
+    enabled: false #enable here
   jpa:
     show-sql: true
     properties:
@@ -26,7 +26,8 @@ spring:
         default_schema: public
   cache:
     type: redis
-    cache-names: UsernameCache
+    cache-names:
+      - UserCache
   data:
     redis:
       host: ${REDIS_HOST}
@@ -38,6 +39,11 @@ feign:
       deduplication: ${MANAGEMENT_HTTP_PROTOCOL}://${MANAGEMENT_HOST}:${MANAGEMENT_PORT}/${DEDUPLICATION_BASE_PATH}
       enrichment: ${MANAGEMENT_HTTP_PROTOCOL}://${MANAGEMENT_HOST}:${MANAGEMENT_PORT}/${ENRICHMENT_BASE_PATH}
       filter: ${MANAGEMENT_HTTP_PROTOCOL}://${MANAGEMENT_HOST}:${MANAGEMENT_PORT}/${FILTER_BASE_PATH}
+
+token:
+  issuer: student
+  signing:
+    secret: 53A73E5F1C4E0A2D3B5F2D784E6A1B423D6F247D1F6E5C3A596D635A75327855
 
 server:
   port: ${APPLICATION_PORT}

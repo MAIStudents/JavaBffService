@@ -62,6 +62,9 @@ dependencies {
 	implementation 'org.liquibase:liquibase-core'
 	implementation 'org.postgresql:postgresql'
 
+	// JWT token
+	implementation 'com.auth0:java-jwt:4.2.0'
+
 	// test
 	testImplementation 'org.testcontainers:testcontainers:1.17.6'
 	testImplementation "org.testcontainers:junit-jupiter:1.17.6"

@@ -1,9 +1,6 @@
 package ru.mai.lessons.rpks;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.HostConfig;
@@ -11,7 +8,6 @@ import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,12 +16,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -33,8 +27,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import ru.mai.lessons.rpks.dto.request.UserRequest;
-import ru.mai.lessons.rpks.dto.response.UserResponse;
 import ru.mai.lessons.rpks.models.User;
 import ru.mai.lessons.rpks.repositories.UserRepository;
 import ru.mai.lessons.rpks.services.UserService;
@@ -52,6 +44,8 @@ public class JavaBffServiceTest {
   private static final Integer POSTGRES_PORT = 5432;
   private static final Integer APPLICATION_PORT = 8080;
 
+  private static final String USER_CACHE_NAME = "UserCache";
+
   private static final Boolean ENABLED_LIQUIBASE = true;
 
   @LocalServerPort
@@ -62,9 +56,6 @@ public class JavaBffServiceTest {
 
   @Autowired
   private UserService userService;
-
-  @Autowired
-  private PasswordEncoder passwordEncoder;
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -127,158 +118,57 @@ public class JavaBffServiceTest {
   }
 
   @Test
-  @DisplayName("Тест на успешное получение доступа к защищенным ресурсам")
-  void givenGoodUser_whenFilterFindAll_thenAccessDenied() {
-    userRepository.saveAndFlush(
-        User.builder()
-            .id(1L)
-            .username("Domoroschenov")
-            .password(passwordEncoder.encode("Password"))
-            .build()
-    );
-    Response loginResponse = RestAssured.given()
-        .contentType(ContentType.URLENC)
-        .formParam("username", "Domoroschenov")
-        .formParam("password", "Password")
-        .when()
-        .post("/login")
-        .then()
-        .log().all()
-        .statusCode(302)
-        .extract()
-        .response();
-
+  @DisplayName("Тест на неуспешную аутентификацию через токен")
+  void givenRequestWithNoToken_whenSomeMethod_thenReturnScUnauthorized() {
     RestAssured.given()
-        .cookie("JSESSIONID", loginResponse.getCookie("JSESSIONID"))
-        .get("/filter/findAll")
-        .then()
-        .log().all()
-        .header("Content-Type", ContentType.JSON.toString());
-  }
-
-  @Test
-  @DisplayName("Тест на неуспешное получение доступа к защищенным ресурсам")
-  void givenWrongUser_whenFilterFindAll_thenAccessDenied() {
-    Response loginResponse = RestAssured.given()
-        .contentType(ContentType.URLENC)
-        .formParam("username", "Domoroschenov")
-        .formParam("password", "Password")
-        .when()
-        .post("/login")
-        .then()
-        .log().all()
-        .statusCode(302)
-        .extract()
-        .response();
-
-    RestAssured.given()
-        .cookie("JSESSIONID", loginResponse.getCookie("JSESSIONID"))
-        .get("/filter/findAll")
-        .then()
-        .log().all()
-        .header("Content-Type", ContentType.HTML.toString());
-  }
-
-  @Test
-  @DisplayName("Тест на регистрацию пользователя")
-  void givenUserInfo_whenRegister_thenAddUserInDatabaseAndReturnResponse() {
-    UserRequest request = UserRequest
-        .builder()
-        .id(1L)
-        .username("Domoroschenov")
-        .password("Password")
-        .build();
-    UserResponse expectedResponse = UserResponse
-        .builder()
-        .id(1L)
-        .username("Domoroschenov")
-        .password("Password")
-        .build();
-
-    UserResponse actualResponse = RestAssured.given()
         .contentType(ContentType.JSON)
-        .body(request)
         .when()
-        .post("/user/register")
+        .get("/deduplication/findAll")
+        .then()
+        .log().all()
+        .statusCode(401)
+        .extract()
+        .response();
+  }
+
+  @Test
+  @DisplayName("Тест на неуспешную аутентификацию через токен из-за отсутствия пользователя в БД")
+  void givenRequestTokenAndNoUserInDatabase_whenSomeMethod_thenReturnScUnauthorized() {
+    RestAssured.given()
+        .contentType(ContentType.URLENC)
+        .when()
+        .header("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBbGV4YW5kciIsImlzcyI6InN0dWRlbnQiLCJleHAiOjMxNTU2ODg5ODY0NDAzMTk5LCJpYXQiOjE3MzcyMzUyMDR9.nwaIS1ck9ylb7YryV33HVflm0sGOGGqpvufj-dHoO7s")
+        .get("/deduplication/findAll")
+        .then()
+        .log().all()
+        .statusCode(401)
+        .extract()
+        .response();
+  }
+
+  @Test
+  @DisplayName("Тест на успешную аутентификацию через токен")
+  void givenRequestWithToken_whenSomeMethod_thenReturnOk() {
+    userRepository.saveAndFlush(User.builder().username("Alexandr").build());
+    RestAssured.given()
+        .contentType(ContentType.URLENC)
+        .when()
+        .header("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBbGV4YW5kciIsImlzcyI6InN0dWRlbnQiLCJleHAiOjMxNTU2ODg5ODY0NDAzMTk5LCJpYXQiOjE3MzcyMzUyMDR9.nwaIS1ck9ylb7YryV33HVflm0sGOGGqpvufj-dHoO7s")
+        .get("/deduplication/findAll")
         .then()
         .log().all()
         .statusCode(200)
-        .extract().as(UserResponse.class);
-
-    assertEquals(expectedResponse, actualResponse,
-        "Пользователь не смог корректно зарегистрироваться");
-    assertNotNull(userRepository.findById(1L).orElse(null),
-        "Информация о зарегистрированном пользователе не записалась в базу данных");
-  }
-
-  @Test
-  @DisplayName("Тест на успешную авторизацию и аутентификацию пользователя")
-  void givenUserInDataBase_whenLogin_thenReturnAccessAllowed() {
-    userRepository.saveAndFlush(
-        User.builder()
-            .id(1L)
-            .username("Domoroschenov")
-            .password(passwordEncoder.encode("Password"))
-            .build()
-    );
-
-    Response actualResponse = RestAssured.given()
-        .contentType(ContentType.URLENC)
-        .formParam("username", "Domoroschenov")
-        .formParam("password", "Password")
-        .when()
-        .post("/login")
-        .then()
-        .log().all()
-        .statusCode(302)
         .extract()
         .response();
-
-    assertFalse(actualResponse.getHeader("Location").contains("error"),
-        "Пользователь не смог авторизоваться, хотя он должен быть в базе данных");
   }
 
   @Test
-  @DisplayName("Тест на неуспешную авторизацию пользователя")
-  void givenUserInDataBase_whenLogin_thenReturnAccessDenied() {
-    Response actualResponse = RestAssured.given()
-        .contentType(ContentType.URLENC)
-        .formParam("username", "Domoroschenov")
-        .formParam("password", "123")
-        .when()
-        .post("/login")
-        .then()
-        .log().all()
-        .statusCode(302)
-        .extract()
-        .response();
+  @DisplayName("Тест кэширование метода loadUserByUsername")
+  void givenRequest_whengetAllDeduplicationsByDeduplicationId_thenReturnAddInCache() {
+    userRepository.saveAndFlush(User.builder().username("Alexandr").build());
+    userService.loadUserByUsername("Alexandr");
 
-    assertTrue(actualResponse.getHeader("Location").contains("error"),
-        "Пользователь смог авторизоваться, хотя его нет в базе данных");
-  }
-
-  @Test
-  @DisplayName("Тест на корректную работу кэша")
-  void givenUsername_whenLoadByUsername_thenReturnValueFromCache() {
-    User expectedUserInCache = User
-        .builder()
-        .id(1L)
-        .username("Domoroschenov")
-        .password(passwordEncoder.encode("Password"))
-        .build();
-    userRepository.saveAndFlush(
-        User.builder()
-            .id(1L)
-            .username("Domoroschenov")
-            .password(passwordEncoder.encode("Password"))
-            .build()
-    );
-    userService.loadUserByUsername("Domoroschenov");
-    Cache redisCache = cacheManager.getCache("UsernameCache");
-
-    User actualValueFromCache = (User) redisCache.get("Domoroschenov").get();
-
-    assertEquals(expectedUserInCache.getId(), actualValueFromCache.getId());
-    assertEquals(expectedUserInCache.getUsername(), actualValueFromCache.getUsername());
+    assertNotNull(cacheManager.getCache(USER_CACHE_NAME));
+    assertNotNull(cacheManager.getCache(USER_CACHE_NAME).get("Alexandr"));
   }
 }
