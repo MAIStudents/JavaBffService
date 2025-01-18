@@ -33,8 +33,8 @@ import ru.mai.lessons.rpks.services.UserService;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {JavaBffServiceTest.Initializer.class})
-public class JavaBffServiceTest {
+@ContextConfiguration(initializers = {JavaServiceBffTest.Initializer.class})
+public class JavaServiceBffTest {
 
   public static final String DEDUPLICATION_URL = "http://localhost:8081/deduplication";
   public static final String ENRICHMENT_URL = "http://localhost:8081/enrichment";

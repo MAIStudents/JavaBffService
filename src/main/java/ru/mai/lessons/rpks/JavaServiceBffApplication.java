@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableFeignClients
 @EnableJpaRepositories
 @SpringBootApplication
-public class JavaBffServiceApplication {
+public class JavaServiceBffApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(JavaBffServiceApplication.class, args);
+    SpringApplication.run(JavaServiceBffApplication.class, args);
   }
 }
